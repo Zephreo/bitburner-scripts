@@ -48,7 +48,7 @@ function pathJoin(...args) {
 }
 
 /** @param {NS} ns
- * Rewrites a file with path substitions to handle downloading to a subfolder. **/
+ * Rewrites a file with path substitutions to handle downloading to a subfolder. **/
 export async function rewriteFileForSubfolder(ns, path) {
     if (!options.subfolder || path.includes('git-pull.js'))
         return true;

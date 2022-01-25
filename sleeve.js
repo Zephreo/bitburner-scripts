@@ -1,6 +1,6 @@
 import { getNsDataThroughFile, formatMoney, formatDuration, disableLogs, readFloat } from './helpers.js'
 
-const interval = 5000; // Uodate (tick) this often
+const interval = 5000; // Update (tick) this often
 const minTaskWorkTime = 59000; // Sleeves assigned a new task should stick to it for at least this many milliseconds
 const tempFile = '/Temp/sleeve-set-task.txt';
 const crimes = ['mug', 'homicide']

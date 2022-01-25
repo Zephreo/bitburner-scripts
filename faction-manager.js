@@ -15,7 +15,7 @@ let factionData = {};
 let augmentationData = {};
 let allAugStats = [];
 let options = null; // A copy of the options used at construction time
-let purchaseableAugs;
+let purchasableAugs;
 let purchaseFactionDonations;
 // Factors that control how augmentation prices scale
 const nfCountMult = 1.14
@@ -113,7 +113,7 @@ export async function main(ns) {
     }
     await manageUnownedAugmentations(ns, omitAugs, verbose);
     displayFactionSummary(ns, verbose, sort, options.u || options.unique, afterFactions, options['hide-stat']);
-    if (options.purchase && purchaseableAugs)
+    if (options.purchase && purchasableAugs)
         await purchaseDesiredAugs(ns, verbose);
 }
 
@@ -299,13 +299,13 @@ function sortAugs(ns, augs = []) {
     let initialCost = getTotalCost(augs);
     let totalMoves = 0;
     for (let i = augs.length - 1; i > 0; i--) {
-        let batchLengh = 1; // Look for a "batch" of prerequisites, evidenced by augs above this one being cheaper instead of more expensive
-        while (i - batchLengh >= 0 && augs[i].price > augs[i - batchLengh].price) batchLengh++;
-        if (batchLengh == 1) continue; // Not the start of a batch of prerequisites
-        log(ns, `Detected a batch of length ${batchLengh} from ${augs[i - batchLengh + 1].name} to ${augs[i].name}`);
+        let batchLength = 1; // Look for a "batch" of prerequisites, evidenced by augs above this one being cheaper instead of more expensive
+        while (i - batchLength >= 0 && augs[i].price > augs[i - batchLength].price) batchLength++;
+        if (batchLength == 1) continue; // Not the start of a batch of prerequisites
+        log(ns, `Detected a batch of length ${batchLength} from ${augs[i - batchLength + 1].name} to ${augs[i].name}`);
         let moved = 0, bestCost = initialCost;
         while (i + moved + 1 < augs.length) { // See if promoting augs from below the batch to above the batch reduces the overall cost
-            let testOrder = augs.slice(), moveIndex = i + moved + 1, insertionIndex = i - batchLengh + 1 + moved;
+            let testOrder = augs.slice(), moveIndex = i + moved + 1, insertionIndex = i - batchLength + 1 + moved;
             testOrder.splice(insertionIndex, 0, testOrder.splice(moveIndex, 1)[0]); // Try moving it above the batch
             let newCost = getTotalCost(testOrder);
             //log(ns, `Cost would change by ${((newCost - bestCost) / bestCost * 100).toPrecision(2)}% from ${formatMoney(bestCost)} to ${formatMoney(newCost)} by buying ${augs[moveIndex].name} before ${augs[insertionIndex].name}`);
@@ -315,7 +315,7 @@ function sortAugs(ns, augs = []) {
             augs.splice(insertionIndex, 0, augs.splice(moveIndex, 1)[0]); // Found a cheaper sort order - lock in the move!
             moved++;
         }
-        i = i - batchLengh + 1; // Decrement i to past the batch so it doesn't try to change the batch's own order
+        i = i - batchLength + 1; // Decrement i to past the batch so it doesn't try to change the batch's own order
         totalMoves += moved;
     }
     let finalCost = getTotalCost(augs);
@@ -352,7 +352,7 @@ async function manageUnownedAugmentations(ns, ignoredAugs, alsoPrintToTerminal) 
 
 /** @param {NS} ns 
  * Helper to generate outputs for different subsets of the augmentations, each in optimal sort order */
-async function manageFilteredSubset(ns, outputRows, subsetName, subset, printList = undefined /* undefined => automatically print if sort order changed */, purchaseable = false) {
+async function manageFilteredSubset(ns, outputRows, subsetName, subset, printList = undefined /* undefined => automatically print if sort order changed */, purchasable = false) {
     subset = subset.slice(); // Take a copy so we don't mess up the original array sent in.
     let subsetLength = subset.length;
     if (subsetLength == 0) return subset;
@@ -373,29 +373,29 @@ async function manageFilteredSubset(ns, outputRows, subsetName, subset, printLis
         outputRows.push(`${subset.length} ${subsetName} Augmentations in Optimized Purchase Order (*'s are desired augs and/or stats: ${options['stat-desired'].join(", ")}):\n  ${subsetSorted.join('\n  ')}`);
     outputRows.push(`Total Cost of ${subset.length} ${subsetName}:`.padEnd(37) + ` ${formatMoney(totalRepCost + totalAugCost)}` +
         (totalRepCost == 0 ? '' : ` (Augs: ${formatMoney(totalAugCost)} + Rep: ${formatMoney(totalRepCost)})  Donate: ${JSON.stringify(repCostByFaction).replaceAll(",", ", ")}`));
-    if (!purchaseable) return subsetSorted; // The remainder of the logic only applies if we are preparing a purchase order
+    if (!purchasable) return subsetSorted; // The remainder of the logic only applies if we are preparing a purchase order
 
     // Hack: Set globals that will be purchased by another method as a final action in the main method
-    purchaseableAugs = subsetSorted.slice();
+    purchasableAugs = subsetSorted.slice();
     purchaseFactionDonations = repCostByFaction;
     // Ensure we can afford the purchase order
     if (totalAugCost + totalRepCost <= playerData.money && options['neuroflux-disabled']) return subsetSorted;
     // Remove the most expensive augmentation until we can afford all that remain
     const dropped = [];
     while (totalAugCost + totalRepCost > playerData.money) {
-        const mostExpensiveAug = purchaseableAugs.slice().sort((a, b) => b.price - a.price)[0];
+        const mostExpensiveAug = purchasableAugs.slice().sort((a, b) => b.price - a.price)[0];
         let costBefore = `${formatMoney(totalRepCost + totalAugCost)} (Augs: ${formatMoney(totalAugCost)} + Rep: ${formatMoney(totalRepCost)})`;
-        purchaseableAugs = sortAugs(ns, purchaseableAugs.filter(aug => aug !== mostExpensiveAug));
-        purchaseFactionDonations = computeAugsRepReqDonationByFaction(ns, purchaseableAugs);
+        purchasableAugs = sortAugs(ns, purchasableAugs.filter(aug => aug !== mostExpensiveAug));
+        purchaseFactionDonations = computeAugsRepReqDonationByFaction(ns, purchasableAugs);
         totalRepCost = Object.values(purchaseFactionDonations).reduce((t, r) => t + r, 0);
-        totalAugCost = getTotalCost(purchaseableAugs);
+        totalAugCost = getTotalCost(purchasableAugs);
         let costAfter = `${formatMoney(totalRepCost + totalAugCost)} (Augs: ${formatMoney(totalAugCost)} + Rep: ${formatMoney(totalRepCost)})`;
         dropped.unshift({ aug: mostExpensiveAug, costBefore, costAfter });
         let dropLog = `Dropping aug from the purchase order: \"${mostExpensiveAug.name}\". New total cost: ${costAfter}`;
         log(ns, dropLog);
     }
     // Recursively call this method one time to display the reduced list of affordable purchases as a separate section
-    manageFilteredSubset(ns, outputRows, 'Affordable', purchaseableAugs, purchaseableAugs.length < subset.length);
+    manageFilteredSubset(ns, outputRows, 'Affordable', purchasableAugs, purchasableAugs.length < subset.length);
     // Let us know how far away we are from being able to get just one more aug:
     if (dropped.length > 0)
         outputRows.push(`Insufficient funds: had to drop ${dropped.length} augs. Next aug \"${dropped[0].aug.name}\" at: ${dropped[0].costBefore}`);
@@ -414,7 +414,7 @@ async function manageFilteredSubset(ns, outputRows, subsetName, subset, printLis
             if (getFrom != factionsWithAug[0].name && factionsWithAug[0] != factionsWithAugAndInvite[0])
                 outputRows.push(`SUGGESTION: Earn an invitation to faction ${factionsWithAug[0].name} to make it easier to get rep for ${strNF} since it has the most favor (${factionsWithAug[0].favor}).`);
             else if (factionsWithAug[0].joined && !factionsWithAug[0].donationsUnlocked)
-                outputRows.push(`SUGGESTION: Do some work for faction ${factionsWithAug[0].name} to qickly earn rep for ${strNF} since it has the most favor (${factionsWithAug[0].favor}).`);
+                outputRows.push(`SUGGESTION: Do some work for faction ${factionsWithAug[0].name} to quickly earn rep for ${strNF} since it has the most favor (${factionsWithAug[0].favor}).`);
             else if ((!getFrom || factionData[getFrom].favor < factionWithMostFavor.favor) && factionWithMostFavor.invited) {
                 outputRows.push(`Attempting to join faction ${factionWithMostFavor.name} to make it easier to get rep for ${strNF} since it has the most favor (${factionWithMostFavor.favor}).`);
                 options['force-join'].push(factionWithMostFavor.name);
@@ -425,15 +425,15 @@ async function manageFilteredSubset(ns, outputRows, subsetName, subset, printLis
             if (!(joinedFactions.includes(factionWithMostFavor.name) && factionWithMostFavor.donationsUnlocked))
                 return subsetSorted;
         }
-        let nfPurchased = purchaseableAugs.filter(a => a.name === augNf.name).length;
+        let nfPurchased = purchasableAugs.filter(a => a.name === augNf.name).length;
         const augNfFaction = factionData[augNf.getFromJoined()];
         log(ns, `nfPurchased: ${nfPurchased}, augNfFaction: ${augNfFaction.name} (rep: ${augNfFaction.reputation}), augNf.price: ${augNf.price}, augNf.reputation: ${augNf.reputation}`);
         while (nfPurchased < 50) {
-            const nextNfCost = augNf.price * (augCountMult ** purchaseableAugs.length) * (nfCountMult ** nfPurchased);
+            const nextNfCost = augNf.price * (augCountMult ** purchasableAugs.length) * (nfCountMult ** nfPurchased);
             const nextNfRep = augNf.reputation * (nfCountMult ** nfPurchased);
             let nfMsg = `Cost of NF ${nfPurchased + 1} is ${formatMoney(nextNfCost)} and will require ${formatNumberShort(nextNfRep)} reputation`
             if (totalAugCost + totalRepCost + nextNfCost > playerData.money) break;
-            purchaseableAugs.push(augNf);
+            purchasableAugs.push(augNf);
             totalAugCost += nextNfCost;
             if (nextNfRep > augNfFaction.reputation) {
                 if (augNfFaction.donationsUnlocked) {
@@ -451,7 +451,7 @@ async function manageFilteredSubset(ns, outputRows, subsetName, subset, printLis
         }
         log(ns, `Can afford to purchase ${nfPurchased} levels of ${strNF}. New total cost: ${formatMoney(totalRepCost + totalAugCost)}` +
             (totalRepCost == 0 ? '' : ` (Augs: ${formatMoney(totalAugCost)} + Rep: ${formatMoney(totalRepCost)})`));
-        outputRows.push(`Total Cost of ${purchaseableAugs.length} (with +${nfPurchased} NF):`.padEnd(37) + ` ${formatMoney(totalRepCost + totalAugCost)}` +
+        outputRows.push(`Total Cost of ${purchasableAugs.length} (with +${nfPurchased} NF):`.padEnd(37) + ` ${formatMoney(totalRepCost + totalAugCost)}` +
             (totalRepCost == 0 ? '' : ` (Augs: ${formatMoney(totalAugCost)} + Rep: ${formatMoney(totalRepCost)})  Donate: ${JSON.stringify(repCostByFaction).replaceAll(",", ", ")}`));
     }
     return subsetSorted;
@@ -487,7 +487,7 @@ function computeAugsRepReqDonationByFaction(ns, augmentations) {
  * Donate any required rep and purchase the desired augmentations */
 async function purchaseDesiredAugs(ns, verbose) {
     let totalRepCost = Object.values(purchaseFactionDonations).reduce((t, r) => t + r, 0);
-    let totalAugCost = getTotalCost(purchaseableAugs);
+    let totalAugCost = getTotalCost(purchasableAugs);
     let money = (await getNsDataThroughFile(ns, 'ns.getPlayer()', '/Temp/player-info.txt')).money;
     if (totalAugCost + totalRepCost > money)
         return log(ns, `ERROR: Purchase order total cost (${formatMoney(totalRepCost + totalAugCost)}` + (totalRepCost == 0 ? '' : ` (Augs: ${formatMoney(totalAugCost)} + Rep: ${formatMoney(totalRepCost)}))`) +
@@ -501,11 +501,11 @@ async function purchaseDesiredAugs(ns, verbose) {
             log(ns, `ERROR: One or more attempts to donate to factions for reputation failed. Go investigate!`, verbose, 'error');
     }
     // Purchase desired augs (using a ram-dodging script of course)
-    if (purchaseableAugs.length == 0)
+    if (purchasableAugs.length == 0)
         log(ns, `INFO: Cannot afford to buy any augmentations at this time.`, verbose)
-    else if (await getNsDataThroughFile(ns, JSON.stringify(purchaseableAugs.map(aug => ({ faction: aug.getFromJoined(), augmentation: aug.name }))) +
+    else if (await getNsDataThroughFile(ns, JSON.stringify(purchasableAugs.map(aug => ({ faction: aug.getFromJoined(), augmentation: aug.name }))) +
         '.reduce((success, o) => ns.purchaseAugmentation(o.faction, o.augmentation) && success, true)', '/Temp/facman-purchase-augs.txt'))
-        log(ns, `SUCCESS: Purchased ${purchaseableAugs.length} desired augmentations in optimal order!`, verbose, 'success')
+        log(ns, `SUCCESS: Purchased ${purchasableAugs.length} desired augmentations in optimal order!`, verbose, 'success')
     else
         log(ns, `ERROR: Failed to purchase one or more augmentations.`, verbose, 'error');
 }
@@ -533,7 +533,7 @@ function displayFactionSummary(ns, alsoPrintToTerminal, sortBy, unique, override
     joinedFactions.push(...overrideFinishedFactions.filter(f => !joinedFactions.includes(f)));
     for (const faction of overrideFinishedFactions)
         ownedAugmentations.push(...factionData[faction].unownedAugmentations());
-    // Grab disctinct augmentations stats 
+    // Grab distinct augmentations stats 
     const relevantAugStats = allAugStats.filter(s => !excludedStats.find(excl => s.includes(excl)) &&
         undefined !== summaryFactions.find(f => f.unownedAugmentations().find(aug => 1 != (augmentationData[aug].stats[s] || 1))));
     let summary = `${summaryFactions.length} factions with augmentations (sorted by total ${sortBy}):`;
@@ -558,7 +558,7 @@ function displayFactionSummary(ns, alsoPrintToTerminal, sortBy, unique, override
         if (sort3 != 0) return sort3;
         let sort4 = a.mostExpensiveAugCost().length - b.mostExpensiveAugCost().length; // If tied, "soonest to unlock", estimated by their most expensive aug cost
         if (sort4 != 0) return sort4;
-        return (a.name).localeCompare(b.name) // If still tied, sort by naeme
+        return (a.name).localeCompare(b.name) // If still tied, sort by name
     };
     // Helper to insert a table separator between factions that do and don't contribute to the specified stat
     let moreContributors = true;

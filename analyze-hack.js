@@ -49,7 +49,7 @@ export async function main(ns) {
 
     // Helper to compute server gain/exp rates at a specific hacking level
     function getRatesAtHackLevel(server, player, hackLevel) {
-        // Assume we will have wekened the server to min-security and taken it to max money before targetting
+        // Assume we will have weakened the server to min-security and taken it to max money before targetting
         server.hackDifficulty = server.minDifficulty;
         server.moneyAvailable = server.moneyMax;
         // Temporarily change the hack level on the player object to the requested level

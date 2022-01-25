@@ -9,7 +9,7 @@ let maxPurchasableServerRamExponent = 20;
 let maxPurchasedServers = 25;
 // Don't attempt to buy any new servers if we're under this utilization
 let utilizationTarget = 0.5;
-// Keep at least this much money on hand (so we arent blocked from buying necessary things)
+// Keep at least this much money on hand (so we aren't blocked from buying necessary things)
 let reservedMoneyAmount = 0; //250000000; // Enable if needed (Can also use reserve.txt)
 let reservedMoneyPercent = 0.99; // Don't spend more than 1% of our money on temporary RAM
 let minRamExponent = 10;
@@ -155,7 +155,7 @@ function tryToBuyBestServerPossible(ns) {
 
     // Under some conditions, we consider the new server "not worthwhile". but only if it isn't the biggest possible server we can buy
     if (exponentLevel < maxPurchasableServerRamExponent) {
-        // Abort if our home server is more than 2x bettter (rough guage of how much we 'need' Daemon RAM at the current stage of the game?)
+        // Abort if our home server is more than 2x better (rough gauge of how much we 'need' Daemon RAM at the current stage of the game?)
         // Unless we're looking at buying the maximum purchasable server size - in which case we can do no better
         if (maxRamPossibleToBuy < ns.getServerMaxRam("home") / 4)
             return setStatus(prefix + 'the most RAM we can buy (' + formatRam(maxRamPossibleToBuy) + ') is way less than (<0.25*) home RAM ' + formatRam(ns.getServerMaxRam("home")));
@@ -194,7 +194,7 @@ function tryToBuyBestServerPossible(ns) {
     if (purchasedServers.length >= maxPurchasedServers) {
         if (worstServerRam == maxPurchasableServerRam) {
             keepRunning = false;
-            return announce('All purchaseable servers are maxed.');
+            return announce('All purchasable servers are maxed.');
         }
 
         // It's only worth deleting our old server if the new server will be 16x bigger or more (or if it's the biggest we can buy)

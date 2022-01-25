@@ -355,7 +355,7 @@ async function tryUpgradeMembers(ns, dictMembers) {
     // Update equipment costs to take into account discounts
     const dictEquipmentCosts = await getGangInfoDict(ns, equipments.map(e => e.name), 'getEquipmentCost');
     equipments.forEach(e => e.cost = dictEquipmentCosts[e.name])
-    // Upgrade members, spending no more than x% of our money per tick (and respecting the global reseve)
+    // Upgrade members, spending no more than x% of our money per tick (and respecting the global reserve)
     const purchaseOrder = [];
     const playerData = await getNsDataThroughFile(ns, 'ns.getPlayer()', '/Temp/player-info.txt');
     const homeMoney = playerData.money - (Number.parseFloat(ns.read("reserve.txt")) || 0);
@@ -382,7 +382,7 @@ async function tryUpgradeMembers(ns, dictMembers) {
 }
 
 /** @param {NS} ns 
- * Spawn a temporary taask to upgrade members. **/
+ * Spawn a temporary task to upgrade members. **/
 async function doUpgradePurchases(ns, purchaseOrder) {
     if (purchaseOrder.length == 0) return;
     const orderSummary = purchaseOrder.map(o => `${o.member} ${o.type}: "${o.equipmentName}"`).join(", ");

@@ -1,6 +1,6 @@
 /** 
  * Read a file and then convert it to a float, returns 0 if file does not exist
- * @param {NS} ns - The nestcript instance passed to your script's main entry point
+ * @param {NS} ns - The netscript instance passed to your script's main entry point
  * @param {string} file - The name of the file to read from
  */
 export function readFloat(ns, file) {
@@ -9,7 +9,7 @@ export function readFloat(ns, file) {
 }
 
 /**
- * Return a formatted representation of the monetary amount using scale sympols (e.g. $6.50M)
+ * Return a formatted representation of the monetary amount using scale symbols (e.g. $6.50M)
  * @param {number} num - The number to format
  * @param {number=} maxSignificantFigures - (default: 6) The maximum significant figures you wish to see (e.g. 123, 12.3 and 1.23 all have 3 significant figures)
  * @param {number=} maxDecimalPlaces - (default: 3) The maximum decimal places you wish to see, regardless of significant figures. (e.g. 12.3, 1.2, 0.1 all have 1 decimal)
@@ -22,14 +22,14 @@ export function formatMoney(num, maxSignificantFigures = 6, maxDecimalPlaces = 3
 const symbols = ["", "k", "m", "b", "t", "q", "Q", "s", "S", "o", "n", "e33", "e36", "e39"];
 
 /**
- * Return a formatted representation of the monetary amount using scale sympols (e.g. 6.50M) 
+ * Return a formatted representation of the monetary amount using scale symbols (e.g. 6.50M) 
  * @param {number} num - The number to format
  * @param {number=} maxSignificantFigures - (default: 6) The maximum significant figures you wish to see (e.g. 123, 12.3 and 1.23 all have 3 significant figures)
  * @param {number=} maxDecimalPlaces - (default: 3) The maximum decimal places you wish to see, regardless of significant figures. (e.g. 12.3, 1.2, 0.1 all have 1 decimal)
  **/
 export function formatNumberShort(num, maxSignificantFigures = 6, maxDecimalPlaces = 3) {
     for (var i = 0, sign = Math.sign(num), num = Math.abs(num); num >= 1000 && i < symbols.length; i++) num /= 1000;
-    // TODO: A number like 9.999 once rounted to show 3 sig figs, will become 10.00, which is now 4 sig figs.
+    // TODO: A number like 9.999 once rounded to show 3 sig figs, will become 10.00, which is now 4 sig figs.
     return ((sign < 0) ? "-" : "") + num.toFixed(Math.max(0, Math.min(maxDecimalPlaces, maxSignificantFigures - Math.floor(1 + Math.log10(num))))) + symbols[i];
 }
 
@@ -44,7 +44,7 @@ export function parseShortNumber(text = "0") {
 }
 
 /**
- * Return a number formatted with the specified number of significatnt figures or decimal places, whichever is more limiting.
+ * Return a number formatted with the specified number of significant figures or decimal places, whichever is more limiting.
  * @param {number} num - The number to format
  * @param {number=} minSignificantFigures - (default: 6) The minimum significant figures you wish to see (e.g. 123, 12.3 and 1.23 all have 3 significant figures)
  * @param {number=} minDecimalPlaces - (default: 3) The minimum decimal places you wish to see, regardless of significant figures. (e.g. 12.3, 1.2, 0.1 all have 1 decimal)
@@ -74,7 +74,7 @@ export function formatRam(value) {
     return `${value.toFixed(2)} ${byte_suffixes[power]}`
 }
 
-/** Return a datatime in ISO format */
+/** Return a datetime in ISO format */
 export function formatDateTime(datetime) { return datetime.toISOString(); }
 
 /** Format a duration (in milliseconds) as e.g. '1h 21m 6s' for big durations or e.g '12.5s' / '23ms' for small durations */
@@ -147,10 +147,10 @@ export function getFnIsAliveViaNsPs(ns) {
 }
 
 /**
- * Retrieve the result of an ns command by executing it in a temporary .js script, writing the result to a file, then shuting it down
+ * Retrieve the result of an ns command by executing it in a temporary .js script, writing the result to a file, then shutting it down
  * Importing incurs a maximum of 1.1 GB RAM (0 GB for ns.read, 1 GB for ns.run, 0.1 GB for ns.isRunning).
  * Has the capacity to retry if there is a failure (e.g. due to lack of RAM available). Not recommended for performance-critical code.
- * @param {NS} ns - The nestcript instance passed to your script's main entry point
+ * @param {NS} ns - The netscript instance passed to your script's main entry point
  * @param {string} command - The ns command that should be invoked to get the desired data (e.g. "ns.getServer('home')" )
  * @param {string=} fName - (default "/Temp/{commandhash}-data.txt") The name of the file to which data will be written to disk by a temporary process
  * @param {bool=} verbose - (default false) If set to true, pid and result of command are logged.
@@ -165,9 +165,9 @@ export async function getNsDataThroughFile(ns, command, fName, verbose = false, 
  * An advanced version of getNsDataThroughFile that lets you pass your own "fnRun" and "fnIsAlive" implementations to reduce RAM requirements
  * Importing incurs no RAM (now that ns.read is free) plus whatever fnRun / fnIsAlive you provide it
  * Has the capacity to retry if there is a failure (e.g. due to lack of RAM available). Not recommended for performance-critical code.
- * @param {NS} ns - The nestcript instance passed to your script's main entry point
- * @param {function} fnRun - A single-argument function used to start the new sript, e.g. `ns.run` or `(f,...args) => ns.exec(f, "home", ...args)`
- * @param {function} fnIsAlive - A single-argument function used to start the new sript, e.g. `ns.isRunning` or `pid => ns.ps("home").some(process => process.pid === pid)`
+ * @param {NS} ns - The netscript instance passed to your script's main entry point
+ * @param {function} fnRun - A single-argument function used to start the new script, e.g. `ns.run` or `(f,...args) => ns.exec(f, "home", ...args)`
+ * @param {function} fnIsAlive - A single-argument function used to start the new script, e.g. `ns.isRunning` or `pid => ns.ps("home").some(process => process.pid === pid)`
  **/
 export async function getNsDataThroughFile_Custom(ns, fnRun, fnIsAlive, command, fName, verbose = false, maxRetries = 5, retryDelayMs = 50) {
     checkNsInstance(ns, '"getNsDataThroughFile_Custom"');
@@ -194,7 +194,7 @@ export async function getNsDataThroughFile_Custom(ns, fnRun, fnIsAlive, command,
 }
 
 /** Evaluate an arbitrary ns command by writing it to a new script and then running or executing it.
- * @param {NS} ns - The nestcript instance passed to your script's main entry point
+ * @param {NS} ns - The netscript instance passed to your script's main entry point
  * @param {string} command - The ns command that should be invoked to get the desired data (e.g. "ns.getServer('home')" )
  * @param {string=} fileName - (default "/Temp/{commandhash}-data.txt") The name of the file to which data will be written to disk by a temporary process
  * @param {bool=} verbose - (default false) If set to true, the evaluation result of the command is printed to the terminal
@@ -209,8 +209,8 @@ export async function runCommand(ns, command, fileName, verbose = false, maxRetr
 /**
  * An advanced version of runCommand that lets you pass your own "isAlive" test to reduce RAM requirements (e.g. to avoid referencing ns.isRunning)
  * Importing incurs 0 GB RAM (assuming fnRun, fnWrite are implemented using another ns function you already reference elsewhere like ns.exec)
- * @param {NS} ns - The nestcript instance passed to your script's main entry point
- * @param {function} fnRun - A single-argument function used to start the new sript, e.g. `ns.run` or `(f,...args) => ns.exec(f, "home", ...args)`
+ * @param {NS} ns - The netscript instance passed to your script's main entry point
+ * @param {function} fnRun - A single-argument function used to start the new script, e.g. `ns.run` or `(f,...args) => ns.exec(f, "home", ...args)`
  **/
 export async function runCommand_Custom(ns, fnRun, command, fileName, verbose = false, maxRetries = 5, retryDelayMs = 50, ...args) {
     checkNsInstance(ns, '"runCommand_Custom"');
@@ -229,7 +229,7 @@ export async function runCommand_Custom(ns, fnRun, command, fileName, verbose = 
 /**
  * Wait for a process id to complete running
  * Importing incurs a maximum of 0.1 GB RAM (for ns.isRunning) 
- * @param {NS} ns - The nestcript instance passed to your script's main entry point
+ * @param {NS} ns - The netscript instance passed to your script's main entry point
  * @param {int} pid - The process id to monitor
  * @param {bool=} verbose - (default false) If set to true, pid and result of command are logged.
  **/
@@ -241,8 +241,8 @@ export async function waitForProcessToComplete(ns, pid, verbose) {
 /**
  * An advanced version of waitForProcessToComplete that lets you pass your own "isAlive" test to reduce RAM requirements (e.g. to avoid referencing ns.isRunning)
  * Importing incurs 0 GB RAM (assuming fnIsAlive is implemented using another ns function you already reference elsewhere like ns.ps) 
- * @param {NS} ns - The nestcript instance passed to your script's main entry point
- * @param {function} fnIsAlive - A single-argument function used to start the new sript, e.g. `ns.isRunning` or `pid => ns.ps("home").some(process => process.pid === pid)`
+ * @param {NS} ns - The netscript instance passed to your script's main entry point
+ * @param {function} fnIsAlive - A single-argument function used to start the new script, e.g. `ns.isRunning` or `pid => ns.ps("home").some(process => process.pid === pid)`
  **/
 export async function waitForProcessToComplete_Custom(ns, fnIsAlive, pid, verbose) {
     checkNsInstance(ns, '"waitForProcessToComplete_Custom"');
@@ -262,7 +262,7 @@ export async function waitForProcessToComplete_Custom(ns, fnIsAlive, pid, verbos
 }
 
 /** Helper to retry something that failed temporarily (can happen when e.g. we temporarily don't have enough RAM to run)
- * @param {NS} ns - The nestcript instance passed to your script's main entry point */
+ * @param {NS} ns - The netscript instance passed to your script's main entry point */
 export async function autoRetry(ns, fnFunctionThatMayFail, fnSuccessCondition, errorContext = "Success condition not met",
     maxRetries = 5, initialRetryDelayMs = 50, backoffRate = 3, verbose = false) {
     checkNsInstance(ns, '"autoRetry"');
@@ -285,7 +285,7 @@ export async function autoRetry(ns, fnFunctionThatMayFail, fnSuccessCondition, e
 }
 
 /** Helper to log a message, and optionally also tprint it and toast it
- * @param {NS} ns - The nestcript instance passed to your script's main entry point */
+ * @param {NS} ns - The netscript instance passed to your script's main entry point */
 export function log(ns, message = "", alsoPrintToTerminal = false, toastStyle = "", maxToastLength = 100) {
     checkNsInstance(ns, '"log"');
     ns.print(message);
@@ -295,7 +295,7 @@ export function log(ns, message = "", alsoPrintToTerminal = false, toastStyle = 
 }
 
 /** Helper to get a list of all hostnames on the network
- * @param {NS} ns - The nestcript instance passed to your script's main entry point */
+ * @param {NS} ns - The netscript instance passed to your script's main entry point */
 export function scanAllServers(ns) {
     checkNsInstance(ns, '"scanAllServers"');
     let discoveredHosts = []; // Hosts (a.k.a. servers) we have scanned
@@ -335,7 +335,7 @@ export async function getActiveSourceFiles_Custom(ns, fnGetNsDataThroughFile) {
 }
 
 /** @param {NS} ns 
- * Return bitnode multiplers, or null if they cannot be accessed. **/
+ * Return bitnode multipliers, or null if they cannot be accessed. **/
 export async function tryGetBitNodeMultipliers(ns) {
     return await tryGetBitNodeMultipliers_Custom(ns, getNsDataThroughFile);
 }

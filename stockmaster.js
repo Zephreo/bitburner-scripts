@@ -8,7 +8,7 @@ let commission = 100000; // Buy/sell commission. Expected profit must exceed thi
 let totalProfit = 0.0; // We can keep track of how much we've earned since start.
 let lastLog = ""; // We update faster than the stock-market ticks, but we don't log anything unless there's been a change
 let allStockSymbols = []; // Stores the set of all symbols collected at start
-let mock = false; // If set to true, will "mock" buy/sell but not actually buy/sell anythingorecast
+let mock = false; // If set to true, will "mock" buy/sell but not actually buy/sell anything
 let noisy = false; // If set to true, tprints and announces each time stocks are bought/sold
 let dictSourceFiles; // Populated at init, a dictionary of source-files the user has access to, and their level
 // Pre-4S configuration (influences how we play the stock market before we have 4S data, after which everything's fool-proof)
@@ -18,7 +18,7 @@ let longTermForecastWindowLength; // This much history will be used to determine
 let nearTermForecastWindowLength; // This much history will be used to detect recent negative trends and act on them immediately.
 // The following pre-4s constants are hard-coded (not configurable via command line) but may require tweaking
 const marketCycleLength = 75; // Every this many ticks, all stocks have a 45% chance of "reversing" their probability. Something we must detect and act on quick to not lose profits.
-const maxTickHistory = 151; // This much history will be kept for purposes of detemining volatility and perhaps one day pinpointing the market cycle tick
+const maxTickHistory = 151; // This much history will be kept for purposes of determining volatility and perhaps one day pinpointing the market cycle tick
 const inversionDetectionTolerance = 0.10; // If the near-term forecast is within this distance of (1 - long-term forecast), consider it a potential "inversion"
 const inversionLagTolerance = 5; // An inversion is "trusted" up to this many ticks after the normal nearTermForecastWindowLength expected detection time
 // (Note: 33 total stocks * 45% inversion chance each cycle = ~15 expected inversions per cycle)
@@ -36,7 +36,7 @@ const argsSchema = [
     ['l', false], // Stop any other running stockmaster.js instances and sell all stocks
     ['liquidate', false],
     ['mock', false], // If set to true, will "mock" buy/sell but not actually buy/sell anything
-    ['noisy', false], // If set to true, tprints and announces each time stocks are bought/soldgetHostnames
+    ['noisy', false], // If set to true, tprints and announces each time stocks are bought/sold
     ['disable-shorts', false], // If set to true, will "mock" buy/sell but not actually buy/sell anything
     ['reserve', 0], // A fixed amount of money to not spend
     ['fracB', 0.4], // Fraction of assets to have as liquid before we consider buying more stock
@@ -189,7 +189,7 @@ export async function main(ns) {
                 let affordableShares = Math.floor((budget - commission) / purchasePrice);
                 let numShares = Math.min(stk.maxShares - stk.ownedShares(), affordableShares);
                 if (numShares <= 0) continue;
-                // Don't buy fewer shares than can beat the comission before the next stock market cycle (after covering the spread), lest the position reverse before we break-even.
+                // Don't buy fewer shares than can beat the commission before the next stock market cycle (after covering the spread), lest the position reverse before we break-even.
                 let ticksBeforeCycleEnd = marketCycleLength - estTick - stk.timeToCoverTheSpread();
                 if (ticksBeforeCycleEnd < 1) continue; // We're cutting it too close to the market cycle, position might reverse before we break-even on commission
                 let estEndOfCycleValue = numShares * purchasePrice * ((stk.absReturn() + 1) ** ticksBeforeCycleEnd - 1); // Expected difference in purchase price and value at next market cycle end
@@ -209,8 +209,8 @@ export async function main(ns) {
 let purchaseOrder = (a, b) => (Math.ceil(a.timeToCoverTheSpread()) - Math.ceil(b.timeToCoverTheSpread())) || (b.absReturn() - a.absReturn());
 
 /* Generic helper for dodging the hefty RAM requirements of stock functions by spawning a temporary script to collect info for us. */
-let getStockInfoDict = async (ns, stockFuncion) => await getNsDataThroughFile(ns,
-    `Object.fromEntries(${JSON.stringify(allStockSymbols)}.map(sym => [sym, ns.stock.${stockFuncion}(sym)]))`, `/Temp/stock-${stockFuncion}.txt`);
+let getStockInfoDict = async (ns, stockFunction) => await getNsDataThroughFile(ns,
+    `Object.fromEntries(${JSON.stringify(allStockSymbols)}.map(sym => [sym, ns.stock.${stockFunction}(sym)]))`, `/Temp/stock-${stockFunction}.txt`);
 
 /** @param {NS} ns **/
 async function initAllStocks(ns, allStockSymbols) {
@@ -273,7 +273,7 @@ async function refresh(ns, playerStats, allStocks, myStocks) {
     for (const stk of allStocks) {
         const sym = stk.sym;
         stk.ask_price = dictAskPrices[sym]; // The amount we would pay if we bought the stock (higher than 'price')
-        stk.bid_price = dictBidPrices[sym]; // The amount we would recieve if we sold the stock (lower than 'price')
+        stk.bid_price = dictBidPrices[sym]; // The amount we would receive if we sold the stock (lower than 'price')
         stk.spread = stk.ask_price - stk.bid_price;
         stk.spread_pct = stk.spread / stk.ask_price; // The percentage of value we lose just by buying the stock
         stk.price = (stk.ask_price + stk.bid_price) / 2; // = ns.stock.getPrice(sym);
@@ -459,7 +459,7 @@ async function doSellAll(ns, stk) {
     }
     if (long) stk.sharesLong -= sharesSold; else stk.sharesShort -= sharesSold; // Maintained for mock mode, otherwise, redundant (overwritten at next refresh)
     totalProfit += profit;
-    return price * sharesSold - commission; // Return the amount of money recieved from the transaction
+    return price * sharesSold - commission; // Return the amount of money received from the transaction
 }
 
 let formatBP = fraction => formatNumberShort(fraction * 100 * 100, 3, 2) + " BP";
