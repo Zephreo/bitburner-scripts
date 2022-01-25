@@ -1,6 +1,6 @@
 let options;
 const argsSchema = [
-    ['github', 'alainbryden'],
+    ['github', 'Zephreo'],
     ['repository', 'bitburner-scripts'],
     ['branch', 'main'],
     ['download', []], // By default, all supported files in the repository will be downloaded. Override with just a subset of files here
@@ -39,6 +39,7 @@ export async function main(ns) {
         else
             ns.tprint(`WARNING: "${localFilePath}" was not updated. (Currently running or not located at ${remoteFilePath} )`)
     }
+    ns.tprint("Done!");
 }
 
 /** Joins all arguments as components in a path, e.g. pathJoin("foo", "bar", "/baz") = "foo/bar/baz" **/

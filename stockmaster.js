@@ -162,7 +162,7 @@ export async function main(ns) {
         }
         if (sales > 0) continue; // If we sold anything, loop immediately (no need to sleep) and refresh stats immediately before making purchasing decisions.
 
-        let cash = playerStats.money - options['reserve'] - readFloat("reserve.txt");
+        let cash = playerStats.money - options['reserve'] - readFloat(ns, "reserve.txt");
         let liquidity = cash / corpus;
         // If we haven't gone above a certain liquidity threshold, don't attempt to buy more stock
         // Avoids death-by-a-thousand-commissions before we get super-rich, stocks are capped, and this is no longer an issue
