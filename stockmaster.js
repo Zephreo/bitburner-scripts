@@ -1,6 +1,6 @@
 import {
     formatMoney, formatNumberShort, formatDuration,
-    getNsDataThroughFile, runCommand, getActiveSourceFiles, tryGetBitNodeMultipliers
+    getNsDataThroughFile, runCommand, getActiveSourceFiles, tryGetBitNodeMultipliers, getFilePath, readFloat
 } from './helpers.js'
 
 let disableShorts = false;
@@ -162,7 +162,7 @@ export async function main(ns) {
         }
         if (sales > 0) continue; // If we sold anything, loop immediately (no need to sleep) and refresh stats immediately before making purchasing decisions.
 
-        let cash = playerStats.money - options['reserve'] - Number(ns.read("reserve.txt") || 0);
+        let cash = playerStats.money - options['reserve'] - readFloat("reserve.txt");
         let liquidity = cash / corpus;
         // If we haven't gone above a certain liquidity threshold, don't attempt to buy more stock
         // Avoids death-by-a-thousand-commissions before we get super-rich, stocks are capped, and this is no longer an issue
@@ -422,7 +422,7 @@ async function doBuy(ns, stk, sharesBought) {
 
     log(ns, `INFO: ${long ? 'Bought ' : 'Shorted'} ${formatNumberShort(sharesBought, 3, 3).padStart(5)}${stk.maxShares == sharesBought + stk.ownedShares() ? ' (max shares)' : ''} ` +
         `${stk.sym.padEnd(5)} @ ${formatMoney(price).padStart(9)} for ${formatMoney(sharesBought * price).padStart(9)} (Spread:${(stk.spread_pct * 100).toFixed(2)}% ` +
-        `ER:${formatBP(stk.expectedReturn()).padStart(8)}) Ticks to Profit: ${stk.timeToCoverTheSpread().toFixed(2)}`, noisy, 'info');
+        `ER:${formatBP(stk.expectedReturn()).padStart(8)}) Ticks to Profit: ${stk.timeToCoverTheSpread().toFixed(2)}`, noisy);
     // The rest of this work is for troubleshooting / mock-mode purposes
     if (price == 0) {
         log(ns, `ERROR: Failed to ${long ? 'buy' : 'short'} ${stk.sym} @ ${formatMoney(expectedPrice)} - 0 was returned.`, true, 'error');

@@ -1,4 +1,4 @@
-import { getNsDataThroughFile, formatMoney, formatDuration, disableLogs } from './helpers.js'
+import { getNsDataThroughFile, formatMoney, formatDuration, disableLogs, readFloat } from './helpers.js'
 
 const interval = 5000; // Uodate (tick) this often
 const minTaskWorkTime = 59000; // Sleeves assigned a new task should stick to it for at least this many milliseconds
@@ -39,7 +39,7 @@ export async function main(ns) {
         availableAugs[i] = null;
 
     while (true) {
-        let cash = ns.getServerMoneyAvailable("home") - Number(ns.read("reserve.txt"));
+        let cash = ns.getServerMoneyAvailable("home") - readFloat("reserve.txt");
         let budget = cash * options['aug-budget'];
         let playerInfo = await getNsDataThroughFile(ns, 'ns.getPlayer()', '/Temp/player-info.txt')
         for (let i = 0; i < numSleeves; i++) {

@@ -44,6 +44,7 @@ const argsSchema = [
     ['disable-donations', false], // When displaying "obtainable" augs and prices, don't include augs that require a donation to meet their rep requirements
     ['purchase', false], // Set to true to pull the trigger on purchasing all desired augs in the order specified
     ['neuroflux-disabled', false], // Set to true to skip including as many neuroflux upgrades as we can afford
+    ['all-desired', false], // ignore stat desired
 ];
 
 const stat_multis = ["agility_exp", "agility", "charisma_exp", "charisma", "company_rep", "crime_money", "crime_success", "defense_exp", "defense", "dexterity_exp", "dexterity",
@@ -102,7 +103,7 @@ export async function main(ns) {
     log(ns, 'Getting all faction data...');
     await updateFactionData(ns, allFactions, omitFactions);
     log(ns, 'Getting all augmentation data...');
-    await updateAugmentationData(ns, options['stat-desired'], desiredAugs);
+    await updateAugmentationData(ns, options['stat-desired'], desiredAugs, options['all-desired']);
     //ns.tprint(Object.values(augmentationData).map(a => a.name).sort()); Print a list of all augmentation names
     if (!ignorePlayerData) {
         log(ns, 'Joining available factions...');
@@ -184,7 +185,7 @@ async function updateFactionData(ns, allFactions, factionsToOmit) {
 }
 
 /** @param {NS} ns **/
-async function updateAugmentationData(ns, desiredStatsFilters, desiredAugs) {
+async function updateAugmentationData(ns, desiredStatsFilters, desiredAugs, allDesired) {
     const augmentationNames = [...new Set(Object.values(factionData).flatMap(f => f.augmentations))]; // augmentations.slice();
     const augsDictCommand = command => `Object.fromEntries(${JSON.stringify(augmentationNames)}.map(aug => [aug, ${command}]))`;
     const dictAugRepReqs = await getNsDataThroughFile(ns, augsDictCommand('ns.getAugmentationRepReq(aug)'), '/Temp/aug-repreqs.txt');
@@ -199,7 +200,7 @@ async function updateAugmentationData(ns, desiredStatsFilters, desiredAugs) {
         stats: dictAugStats[aug],
         prereqs: dictAugPrereqs[aug] || [],
         // The best augmentations either have no stats (special effect like no Focus penalty, or Red Pill), or stats in the 'stat-desired' command line options
-        desired: desiredAugs.includes(aug) || Object.keys(dictAugStats[aug]).length == 0 ||
+        desired: allDesired || desiredAugs.includes(aug) || Object.keys(dictAugStats[aug]).length == 0 ||
             Object.keys(dictAugStats[aug]).some(key => desiredStatsFilters.some(filter => key.includes(filter))),
         // Get the name of the "most-early-game" faction from which we can buy this augmentation. Estimate this by cost of the most expensive aug the offer
         getFromAny: factionNames.map(f => factionData[f]).sort((a, b) => a.mostExpensiveAugCost - b.mostExpensiveAugCost)

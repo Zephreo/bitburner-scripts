@@ -1,4 +1,4 @@
-import { formatMoney, formatRam, parseShortNumber, getNsDataThroughFile, tryGetBitNodeMultipliers } from './helpers.js'
+import { formatMoney, formatRam, parseShortNumber, getNsDataThroughFile, tryGetBitNodeMultipliers, getFilePath, readFloat } from './helpers.js'
 
 // The purpose of the host manager is to buy the best servers it can
 // until it thinks RAM is underutilized enough that you don't need to anymore.
@@ -28,7 +28,7 @@ const argsSchema = [
     ['run-continuously', false],
     ['absolute-reserve', 0], // Set to reserve money
     ['reserve-percent', 0.9], // Set to reserve a percentage of home money
-    ['utilization-trigger', 0.95], // the percentage utilization that will trigger an attempted purchase
+    ['utilization-trigger', 0.9], // the percentage utilization that will trigger an attempted purchase
     ['min-ram-exponent', 5], // the minimum amount of ram to purchase
 ];
 
@@ -108,7 +108,6 @@ function tryToBuyBestServerPossible(ns) {
     // Note: You can request the official list of purchased servers (cost 2.25 GB RAM), but we have that commented out here.
     //let purchasedServers = ns.getPurchasedServers();
     // If you're willing to remember to always name manually purchased severs "daemon", then this should work
-    //let purchasedServers = ns.getPurchasedServers();
     let purchasedServers = rootedServers.filter(hostName => hostName.startsWith(purchasedServerName)).sort();
 
     // analyze the utilization rates
@@ -123,9 +122,10 @@ function tryToBuyBestServerPossible(ns) {
     // Check for other reasons not to go ahead with the purchase
     let prefix = 'Host-manager wants to buy another server, but ';
 
-    const reserve = Number.parseFloat(ns.read('reserve.txt'));
+    const reserve = readFloat(ns, 'reserve.txt');
     let currentMoney = _ns.getServerMoneyAvailable("home");
     let spendableMoney = currentMoney - reserve;
+
     // Reserve at least enough money to buy the final hack tool, if we do not already have it (once we do, remember and stop checking)
     if (!ns.fileExists("SQLInject.exe", "home")) {
         prefix += '(reserving an extra 250M for SQLInject) ';

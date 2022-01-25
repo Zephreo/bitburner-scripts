@@ -1,3 +1,13 @@
+/** 
+ * Read a file and then convert it to a float, returns 0 if file does not exist
+ * @param {NS} ns - The nestcript instance passed to your script's main entry point
+ * @param {string} file - The name of the file to read from
+ */
+export function readFloat(ns, file) {
+    checkNsInstance(ns, '"readFloat"')
+    return Number.parseFloat(ns.read(getFilePath(file)) || 0);
+}
+
 /**
  * Return a formatted representation of the monetary amount using scale sympols (e.g. $6.50M)
  * @param {number} num - The number to format
@@ -43,8 +53,26 @@ export function formatNumber(num, minSignificantFigures = 3, minDecimalPlaces = 
     return num == 0.0 ? num : num.toFixed(Math.max(minDecimalPlaces, Math.max(0, minSignificantFigures - Math.ceil(Math.log10(num)))));
 }
 
-/** Formats some RAM amount as a round number of GB with thousands separators e.g. `1,028 GB` */
-export function formatRam(num) { return `${Math.round(num).toLocaleString()} GB`; }
+const byte_suffixes = ['GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+/** Formats some RAM amount as binary (IEC Standard) data units with 2 decimal places e.g. `1024 = 1.00 TB` */
+export function formatRam(value) {
+    let power = 0
+    let min = 1
+    let max = 1024
+    for (; power <= byte_suffixes.length; power++) {
+        //min = Math.pow(1024, power)
+        //max = Math.pow(1024, power + 1)
+
+        if (value === null || value === 0 || value >= min && value < max) {
+            if (min > 0) value = value / min
+            break
+        }
+        
+        min = min * 1024 
+        max = max * 1024 
+    }
+    return `${value.toFixed(2)} ${byte_suffixes[power]}`
+}
 
 /** Return a datatime in ISO format */
 export function formatDateTime(datetime) { return datetime.toISOString(); }

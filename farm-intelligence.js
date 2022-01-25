@@ -1,7 +1,7 @@
 import { formatMoney, formatDuration, formatNumberShort, disableLogs } from './helpers.js'
 
 const argsSchema = [
-    ['trips-per-cycle', 1000],
+    ['trips-per-cycle', 50000],
     ['money-threshold', 1000000000000]
 ];
 

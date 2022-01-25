@@ -25,13 +25,14 @@ const preferredEarlyFactionOrder = [
     "Slum Snakes", // Unlock Gangs
     "Netburners", // Required to set up hash income
     "Tian Di Hui", "Aevum", // These give all the company_rep and faction_rep bonuses early game    
-    "CyberSec", /* Quick, and NightSec aug depends on an aug from here */ "NiteSec", "Tetrads", // Cha augs to speed up earning company promotions
+    "CyberSec", /* Quick, and NightSec aug depends on an aug from here */ "NiteSec", // Cha augs to speed up earning company promotions
     "Bachman & Associates", // Boost company/faction rep for future augs
     "Daedalus", // Once we have all faction_rep boosting augs, there's no reason not to work towards Daedalus as soon as it's available/feasible so we can buy Red Pill
     "Fulcrum Secret Technologies", // Will be removed if hack level is too low to backdoor their server
     "ECorp", // More cmp_rep augs, and some strong hack ones as well
     "BitRunners", "The Black Hand", // Fastest sources of hacking augs after the above companies
-    "The Dark Army", // Unique cmp_rep aug TODO: Can it sensibly be gotten before corps? Requires 300 all combat stats.
+    // "Tetrads",
+    // "The Dark Army", // Unique cmp_rep aug TODO: Can it sensibly be gotten before corps? Requires 300 all combat stats.
     "Clarke Incorporated", "OmniTek Incorporated", "NWO", // More hack augs from companies
     "Chongqing", // Unique Source of big 1.4x hack exp boost (Can only join if not in e.g. Aevum as well)
 ];
@@ -51,9 +52,9 @@ const preferredCompanyFactionOrder = [
 // Order in which to focus on crime factions
 const preferredCrimeFactionOrder = ["Netburners", "Slum Snakes", "NiteSec", "Tetrads", "The Black Hand", "The Syndicate", "The Dark Army", "Speakers for the Dead", "Daedalus"]
 
-const loopSleepInterval = 5000; // 5 seconds
-const statusUpdateInterval = 60000; // 1 minute (outside of this, minor updates in e.g. stats aren't logged)
-const restartWorkInteval = 30000; // Collect e.g. rep earned by stopping and starting work;
+const loopSleepInterval = 6000; // 6 seconds
+const statusUpdateInterval = 120000; // 2 minutes (outside of this, minor updates in e.g. stats aren't logged)
+const restartWorkInteval = 120000; // Collect e.g. rep earned by stopping and starting work;
 let noFocus = false; // Can be set via command line to disable doing work that requires focusing (crime, studying, or focused faction/company work)
 let noStudying = false; // Disable studying for Charisma. Useful in longer resets when Cha augs are insufficient to meet promotion requirements (Also disabled with --no-focus)
 let noCrime = false; // Disable doing crimes at all. (Also disabled with --no-focus)
@@ -139,6 +140,10 @@ export async function main(ns) {
                 preferredEarlyFactionOrder.splice(configGangIndex, 1);
             allGangFactions = await getNsDataThroughFile(ns, 'Object.keys(ns.gang.getOtherGangInformation())', '/Temp/gang-names.txt') || [];
         }
+    } else {
+        let configGangIndex = preferredEarlyFactionOrder.findIndex(f => f === "Slum Snakes");
+        if (configGangIndex != -1) // If we can't use gangs, don't need to earn an invite to slum snakes anymore
+            preferredEarlyFactionOrder.splice(configGangIndex, 1);
     }
 
     // Get some augmentation information to decide what remains to be purchased
@@ -293,7 +298,7 @@ async function earnFactionInvite(ns, factionName) {
         return ns.print(`${reasonPrefix} you have insufficient hack level. Need: ${requirement}, Have: ${player.hacking}`);
     // Note: This only complains if we have insuffient hack to backdoor this faction server. If we have sufficient hack, we will "waitForInvite" below assuming an external script is backdooring ASAP 
     if ((requirement = requiredBackdoorByFaction[factionName]) && player.hacking < ns.getServerRequiredHackingLevel(requirement))
-        return ns.print(`${reasonPrefix} you must fist backdoor ${requirement}, which needs hack: ${ns.getServerRequiredHackingLevel(requirement)}, Have: ${player.hacking}`);
+        return ns.print(`${reasonPrefix} you must first backdoor ${requirement}, which needs hack: ${ns.getServerRequiredHackingLevel(requirement)}, Have: ${player.hacking}`);
     //await getNsDataThroughFile(ns, `ns.connect('fulcrumassets'); await ns.installBackdoor(); ns.connect(home)`, '/Temp/backdoor-fulcrum.txt') // TODO: Do backdoor if we can but haven't yet?
 
     // See if we can take action to earn an invite for the next faction under consideration
@@ -386,9 +391,10 @@ export async function crimeForKillsKarmaStats(ns, reqKills, reqKarma, reqStats, 
         let crimeChances = await getNsDataThroughFile(ns, `Object.fromEntries(${JSON.stringify(bestCrimesByDifficulty)}.map(c => [c, ns.getCrimeChance(c)]))`, '/Temp/crime-chances.txt');
         let needStats = player.strength < reqStats || player.defense < reqStats || player.dexterity < reqStats || player.agility < reqStats;
         let karma = -ns.heart.break();
-        crime = (karma < 1 || player.strength < 10) && crimeCount < 10 ? "mug" : karma < 5 && player.strength > 20 && crimeCount < 20 && crimeChances[2] > 0.5 ? "homicide" : // Start with a few fast crimes to boost stats / crime chances if we haven't done much crime before
+        crime = ((karma < 1 || player.strength < 10) && crimeCount < 10) ? "mug" : (karma < 5 && player.strength > 20 && crimeCount < 20 && crimeChances[2] > 0.5) ? "homicide" : // Start with a few fast crimes to boost stats / crime chances if we haven't done much crime before
             (!needStats && (player.numPeopleKilled < reqKills || karma < reqKarma)) ? "homicide" : // If *all* we need now is kills or Karma, homicide is the fastest way to do that
-                bestCrimesByDifficulty.find((c, index) => doFastCrimesOnly ? index > 1 : crimeChances[c] >= chanceThresholds[index]); // Otherwise, crime based on success chance vs relative reward (precomputed)
+                bestCrimesByDifficulty.find((c, index) => (!doFastCrimesOnly || index > 1) && crimeChances[c] >= chanceThresholds[index]); // Otherwise, crime based on success chance vs relative reward (precomputed)
+        // ns.tprint(`Crime: ${crime}, Chances: ${Object.entries(crimeChances)}`)
         if (lastCrime != crime || (Date.now() - lastStatusUpdateTime) > statusUpdateInterval) {
             ns.print(`Committing "${crime}" (${(100 * crimeChances[crime]).toPrecision(3)}% success) ` + (forever ? 'forever...' : `until we reach ${strRequirements.map(r => r()).join(', ')}`));
             lastCrime = crime;
@@ -538,8 +544,9 @@ export async function workForSingleFaction(ns, factionName, forceUnlockDonations
         let workRepGained = ns.getPlayer().workRepGained; // Try to align ourselves to the next game tick so we aren't missing out on a few ms of rep
         while (workRepGained === ns.getPlayer().workRepGainRate && (Date.now() - lastActionRestart < 200)) await ns.sleep(1);
         // If we explicitly stop working, we immediately get our updated faction rep, otherwise it lags by 1 loop (until after next time we call workForFaction)
-        if (currentReputation + ns.getPlayer().workRepGained >= factionRepRequired)
+        if (currentReputation + ns.getPlayer().workRepGained >= factionRepRequired) {
             await getNsDataThroughFile(ns, `ns.stopAction()`, '/Temp/stop-action.txt'); // We're close - stop working so our current rep is accurate when we check the while loop condition
+        }
     }
     if (currentReputation >= factionRepRequired)
         ns.print(`Attained ${Math.round(currentReputation).toLocaleString()} rep with "${factionName}" (needed ${factionRepRequired.toLocaleString()}).`);
