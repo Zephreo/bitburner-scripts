@@ -62,7 +62,7 @@ const strNF = "NeuroFlux Governor"
 export function autocomplete(data, args) {
     data.flags(argsSchema);
     const lastFlag = args.length > 1 ? args[args.length - 2] : null;
-    if (lastFlag == "--sort")
+    if (lastFlag == "--sort" || lastFlag == "--stat-desired")
         return stat_multis;
     if (lastFlag == "--disable-faction" || lastFlag == "--after-faction")
         return factions.map(f => f.replaceAll(" ", "_")).sort(); // Command line doesn't like spaces

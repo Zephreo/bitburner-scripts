@@ -150,7 +150,8 @@ const argsSchema = [
     ['reserved-ram', 32],
     ['looping-mode', false], // Set to true to attempt to schedule perpetually-looping tasks.
     ['recovery-thread-padding', 1],
-    ['tail', false] // Set to true to tail the script at startup
+    ['tail', false], // Set to true to tail the script at startup
+    ['disable-work', false], // Set to true to disable auto running work-for-factions.js
 ];
 
 export function autocomplete(data, args) {
@@ -227,7 +228,7 @@ export async function main(ns) {
         { name: "sleeve.js", tail: true, shouldRun: () => 10 in dictSourceFiles }, // Script to create manage our sleeves for us
         {
             name: "work-for-factions.js", tail: true, args: [ownedAugmentations.length > 15 ? '--fast-crimes-only' : '--no-crime', '--no-studying'],  // Singularity script to manage how we use our "focus" work.
-            shouldRun: () => 4 in dictSourceFiles && (ns.getServerMaxRam("home") >= 128 / (2 ** dictSourceFiles[4])) // Higher SF4 levels result in lower RAM requirements
+            shouldRun: () => 4 in dictSourceFiles && (ns.getServerMaxRam("home") >= 128 / (2 ** dictSourceFiles[4])) && !options['disable-work'] // Higher SF4 levels result in lower RAM requirements
         },
     ];
     asynchronousHelpers.forEach(helper => helper.name = getFilePath(helper.name));
